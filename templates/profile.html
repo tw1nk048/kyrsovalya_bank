@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Профиль</title>
+    <link rel="stylesheet" href="/static/css/toolbar.css">
+    <link rel="stylesheet" href="/static/css/profile.css">
+</head>
+<body>
+    <div class="toolbar">
+        <div class="logo"><a href="/">Arsenio-Bank</a></div>
+        <div class="auth-links">
+            {% if session['username'] %}
+                <a href="/profile">Профиль</a>
+                {% if session['role'] == 'admin' %}
+                    <a href="/admin">Админ панель</a>
+                    <a href="/status">Кредиты на рассмотрение</a>
+                    <a href="/payments">Рассмотрение выплат по кредиту</a>
+                {% endif %}
+                {% if session['role'] == 'user' %}
+                    <a href="/apply_credit">Взять кредит</a>
+                    <a href="/make_payment">Выплатить кредит</a>
+                {% endif %}
+                <a href="/logout">Выйти</a>
+            {% else %}
+                <a href="/login">Войти</a>
+                <a href="/register">Регистрация</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="container">
+        <h1>Профиль пользователя</h1>
+        <table>
+
+            <tr>
+                <th>Фамилия</th>
+                <td>{{ user_data.last_name }}</td>
+            </tr>
+            <tr>
+                <th>Имя</th>
+                <td>{{ user_data.name }}</td>
+            </tr>
+            <tr>
+                <th>Отчество</th>
+                <td>{{ user_data.middle_name }}</td>
+            </tr>
+            <tr>
+                <th>Дата рождения</th>
+                <td>{{ user_data.date_birth }}</td>
+            </tr>
+            <tr>
+                <th>Адрес проживания</th>
+                <td>{{ user_data.residential_address }}</td>
+            </tr>
+            <tr>
+                <th>Доход</th>
+                <td>{{ user_data.income }}</td>
+            </tr>
+            <tr>
+                <th>Паспортные данные</th>
+                <td>{{ user_data.passport_data }}</td>
+            </tr>
+            <tr>
+                <th>Семейное положение</th>
+                <td>{{ user_data.marital_status }}</td>
+            </tr>
+        </table>
+
+        <h1>Кредиты</h1>
+        <table>
+            <tr>
+                <th>id</th>
+                <th>Продукт</th>
+                <th>Дата выдачи</th>
+                <th>Ежемесячные взносы</th>
+                <th>Дата погашения</th>
+                <th>Процент по кредиту</th>
+                <th>Статус</th>
+                <th>Сумма</th>
+            </tr>
+            {% for credit in user_credits %}
+                <tr>
+                    <td>{{ credit.id }}</td>
+                    <td>{{ credit.product_name }}</td>
+                    <td>{{ credit.date_issue }}</td>
+                    <td>{{ credit.monthly_contributions }}</td>
+                    <td>{{ credit.maturity_date }}</td>
+                    <td>{{ credit.percent_on_credit }}</td>
+                    <td>{{ credit.status }}</td>
+                    <td>{{ credit.sum }}</td>
+                </tr>
+            {% endfor %}
+        </table>
+
+        <h1>Выплаты</h1>
+        <table>
+            <tr>
+                <th>Кредит ID</th>
+                <th>Дата вклада</th>
+                <th>Сумма выплат</th>
+                <th>Статус вклада</th>
+            </tr>
+            {% for payout in user_payouts %}
+                <tr>
+                    <td>{{ payout.credit_id }}</td>
+                    <td>{{ payout.date_deposit }}</td>
+                    <td>{{ payout.amount_payments }}</td>
+                    <td>{{ payout.contribution_status }}</td>
+                </tr>
+            {% endfor %}
+        </table>
+    </div>
+</body>
+</html>

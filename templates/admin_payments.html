@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Выплаты по кредитам</title>
+    <link rel="stylesheet" href="/static/css/toolbar.css">
+    <link rel="stylesheet" href="/static/css/admin_applications.css">
+</head>
+<body>
+    <div class="toolbar">
+        <div class="logo"><a href="/">Arsenio-Bank</a></div>
+        <div class="auth-links">
+            {% if session['username'] %}
+                <a href="/profile">Профиль</a>
+                {% if session['role'] == 'admin' %}
+                    <a href="/admin">Админ панель</a>
+                    <a href="/status">Кредиты на рассмотрение</a>
+                    <a href="/payments">Рассмотрение выплат по кредиту</a>
+                {% endif %}
+                {% if session['role'] == 'user' %}
+                    <a href="/apply_credit">Взять кредит</a>
+                    <a href="/make_payment">Выплатить кредит</a>
+                {% endif %}
+                <a href="/logout">Выйти</a>
+            {% else %}
+                <a href="/login">Войти</a>
+                <a href="/register">Регистрация</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="container">
+        <h1>Выплаты по кредитам</h1>
+        <table>
+            <tr>
+                <th>ID Выплаты</th>
+                <th>Фамилия</th>
+                <th>Имя</th>
+                <th>Отчество</th>
+                <th>ID Кредита</th>
+                <th>Дата выплаты</th>
+                <th>Сумма</th>
+                <th>Статус</th>
+                <th>Действия</th>
+            </tr>
+            {% for payment in payments %}
+                <tr>
+                    <td>{{ payment[0] }}</td>
+                    <td>{{ payment[1] }}</td>
+                    <td>{{ payment[2] }}</td>
+                    <td>{{ payment[3] }}</td>
+                    <td>{{ payment[4] }}</td>
+                    <td>{{ payment[5] }}</td>
+                    <td>{{ payment[6] }}</td>
+                    <td>{{ 'Заплачено' if payment[7] == 0 else 'Просрочено' if payment[7] == 1 else 'На рассмотрении' }}</td>
+                    <td>
+                        <a href="{{ url_for('mark_payment_paid', payment_id=payment[0]) }}">Отметить как заплачено</a>
+                        <a href="{{ url_for('mark_payment_overdue', payment_id=payment[0]) }}">Отметить как просрочено</a>
+                    </td>
+                </tr>
+            {% endfor %}
+        </table>
+    </div>
+</body>
+</html>

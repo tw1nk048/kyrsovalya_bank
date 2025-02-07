@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Отчет по выплатам клиента</title>
+    <link rel="stylesheet" href="/static/css/toolbar.css">
+    <link rel="stylesheet" href="/static/css/report.css">
+</head>
+<body>
+    <div class="toolbar">
+        <div class="logo"><a href="/">Arsenio-Bank</a></div>
+        <div class="auth-links">
+            {% if session['username'] %}
+                <a href="/profile">Профиль</a>
+                {% if session['role'] == 'admin' %}
+                    <a href="/admin">Админ панель</a>
+                    <a href="/status">Кредиты на рассмотрение</a>
+                    <a href="/payments">Рассмотрение выплат по кредиту</a>
+                {% endif %}
+                {% if session['role'] == 'user' %}
+                    <a href="/apply_credit">Взять кредит</a>
+                    <a href="/make_payment">Выплатить кредит</a>
+                {% endif %}
+                <a href="/logout">Выйти</a>
+            {% else %}
+                <a href="/login">Войти</a>
+                <a href="/register">Регистрация</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="container">
+        <h1>Отчет по выплатам клиента</h1>
+
+        {% if not data %}
+        <form method="POST">
+            <label for="client_id">Введите ID клиента:</label>
+            <input type="text" id="client_id" name="client_id" required>
+            <button type="submit">Сгенерировать отчет</button>
+        </form>
+        {% endif %}
+
+        {% if data %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Фамилия клиента</th>
+                        <th>Имя клиента</th>
+                        <th>Сумма кредита</th>
+                        <th>Дата выплаты</th>
+                        <th>Сумма выплаты</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in data %}
+                        <tr>
+                            <td>{{ row[0] }}</td>
+                            <td>{{ row[1] }}</td>
+                            <td>{{ row[2] }}</td>
+                            <td>{{ row[3] }}</td>
+                            <td>{{ row[4] }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <form method="POST">
+                <input type="hidden" name="client_id" value="{{ request.form['client_id'] }}">
+            </form>
+        {% endif %}
+    </div>
+</body>
+</html>

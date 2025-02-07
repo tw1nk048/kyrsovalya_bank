@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Главная страница</title>
+    <link rel="stylesheet" href="/static/css/toolbar.css">
+    <link rel="stylesheet" href="/static/css/home.css">
+</head>
+<body>
+    <div class="toolbar">
+        <div class="logo"><a href="/">Arsenio-Bank</a></div>
+        <div class="auth-links">
+            {% if session['username'] %}
+                <a href="/profile">Профиль</a>
+                {% if session['role'] == 'admin' %}
+                    <a href="/admin">Админ панель</a>
+                    <a href="/status">Кредиты на рассмотрение</a>
+                    <a href="/payments">Рассмотрение выплат по кредиту</a>
+                {% endif %}
+                {% if session['role'] == 'user' %}
+                    <a href="/apply_credit">Взять кредит</a>
+                    <a href="/make_payment">Выплатить кредит</a>
+                {% endif %}
+                <a href="/logout">Выйти</a>
+            {% else %}
+                <a href="/login">Войти</a>
+                <a href="/register">Регистрация</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="main">
+        <div class="container">
+            <h1>Кредитный отдел банка</h1>
+            <p>Добро пожаловать в кредитный отдел банка, здесь вы можете увидеть доступные кредиты и подать заявку!</p>
+
+            <div class="credit-products">
+                <h2>Доступные кредиты нашего банка</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Название продукта</th>
+                            <th>Мин. процент</th>
+                            <th>Макс. процент</th>
+                            <th>Мин. срок возврата (мес.)</th>
+                            <th>Макс. срок возврата (мес.)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for product in credit_products %}
+                        <tr>
+                            <td>{{ product[0] }}</td>
+                            <td>{{ product[1] }}%</td>
+                            <td>{{ product[2] }}%</td>
+                            <td>{{ product[3] }}</td>
+                            <td>{{ product[4] }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

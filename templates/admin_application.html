@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Заявки на кредиты</title>
+    <link rel="stylesheet" href="/static/css/toolbar.css">
+    <link rel="stylesheet" href="/static/css/admin_applications.css">
+</head>
+<body>
+    <div class="toolbar">
+        <div class="logo"><a href="/">Arsenio-Bank</a></div>
+        <div class="auth-links">
+            {% if session['username'] %}
+                <a href="/profile">Профиль</a>
+                {% if session['role'] == 'admin' %}
+                    <a href="/admin">Админ панель</a>
+                    <a href="/status">Кредиты на рассмотрение</a>
+                    <a href="/payments">Рассмотрение выплат по кредиту</a>
+                {% endif %}
+                {% if session['role'] == 'user' %}
+                    <a href="/apply_credit">Взять кредит</a>
+                    <a href="/make_payment">Выплатить кредит</a>
+                {% endif %}
+                <a href="/logout">Выйти</a>
+            {% else %}
+                <a href="/login">Войти</a>
+                <a href="/register">Регистрация</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="container">
+        <h1>Заявки на кредиты</h1>
+        <table>
+            <tr>
+                <th>ID Заявки</th>
+                <th>Фамилия</th>
+                <th>Имя</th>
+                <th>Отчество</th>
+                <th>Продукт</th>
+                <th>Сумма</th>
+                <th>Дата погашения</th>
+                <th>Статус</th>
+                <th>Дата заявки</th>
+                <th>Действия</th>
+            </tr>
+            {% for application in applications %}
+                <tr>
+                    <td>{{ application[0] }}</td>
+                    <td>{{ application[1] }}</td>
+                    <td>{{ application[2] }}</td>
+                    <td>{{ application[3] }}</td>
+                    <td>{{ application[4] }}</td>
+                    <td>{{ application[5] }}</td>
+                    <td>{{ application[6] }}</td>
+                    <td>{{ application[7] }}</td>
+                    <td>{{ application[8] }}</td>
+                    <td>
+                        <a href="{{ url_for('approve_application', credit_id=application[0]) }}">Одобрить</a>
+                        <a href="{{ url_for('reject_application', credit_id=application[0]) }}">Отклонить</a>
+                    </td>
+                </tr>
+            {% endfor %}
+        </table>
+    </div>
+</body>
+</html>

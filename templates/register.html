@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Регистрация</title>
+    <link rel="stylesheet" href="/static/css/toolbar.css">
+    <link rel="stylesheet" href="/static/css/login-reg.css">
+</head>
+<body>
+    <div class="toolbar">
+        <div class="logo"><a href="/">Arsenio-Bank</a></div>
+        <div class="auth-links">
+            <a href="/">Главная</a>
+            <a href="/login">Вход</a>
+        </div>
+    </div>
+
+    <div class="main">
+        <div class="container">
+            <h1>Регистрация</h1>
+            <form method="POST">
+                <label for="username">Имя пользователя:</label>
+                <input type="text" id="username" name="username" required>
+
+                <label for="password">Пароль:</label>
+                <input type="password" id="password" name="password" required>
+
+                <label for="clt_last_name">Фамилия:</label>
+                <input type="text" id="clt_last_name" name="clt_last_name" required>
+
+                <label for="clt_name">Имя:</label>
+                <input type="text" id="clt_name" name="clt_name" required>
+
+                <label for="clt_middle_name">Отчество:</label>
+                <input type="text" id="clt_middle_name" name="clt_middle_name">
+
+                <label for="clt_date_birth">Дата рождения:</label>
+                <input type="date" id="clt_date_birth" name="clt_date_birth" required>
+
+                <label for="clt_residential_address">Адрес проживания:</label>
+                <input type="text" id="clt_residential_address" name="clt_residential_address" required>
+
+                <label for="clt_income">Доход:</label>
+                <input type="number" step="0.01" id="clt_income" name="clt_income" required>
+
+                <label for="clt_passport_data">Паспортные данные:</label>
+                <input type="text" id="clt_passport_data" name="clt_passport_data" required>
+
+                <label for="clt_marital_status">Семейное положение: 0 - холост; 1 - женат/замужем; 2 - разведен/а.</label>
+                <input type="text" id="clt_marital_status" name="clt_marital_status" required>
+
+                <button type="submit">Зарегистрироваться</button>
+            </form>
+            <p>Уже есть аккаунт? <a href="/login">Вход</a></p>
+        </div>
+    </div>
+</body>
+</html>

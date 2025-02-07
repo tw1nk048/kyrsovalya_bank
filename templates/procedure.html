@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Процедура</title>
+    <link rel="stylesheet" href="/static/css/toolbar.css">
+    <link rel="stylesheet" href="/static/css/report.css">
+</head>
+<body>
+    <div class="toolbar">
+        <div class="logo"><a href="/">Arsenio-Bank</a></div>
+        <div class="auth-links">
+            {% if session['username'] %}
+                <a href="/profile">Профиль</a>
+                {% if session['role'] == 'admin' %}
+                    <a href="/admin">Админ панель</a>
+                    <a href="/status">Кредиты на рассмотрение</a>
+                    <a href="/payments">Рассмотрение выплат по кредиту</a>
+                {% endif %}
+                {% if session['role'] == 'user' %}
+                    <a href="/apply_credit">Взять кредит</a>
+                    <a href="/make_payment">Выплатить кредит</a>
+                {% endif %}
+                <a href="/logout">Выйти</a>
+            {% else %}
+                <a href="/login">Войти</a>
+                <a href="/register">Регистрация</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="container">
+        <h1>Процедура</h1>
+
+        {% if not data %}
+        <form method="POST">
+            <label for="id_client_tf">ID клиента:</label>
+            <input type="text" id="id_client_tf" name="id_client_tf" required><br><br>
+
+            <label for="credit_product_tf">ID кредитного продукта:</label>
+            <input type="text" id="credit_product_tf" name="credit_product_tf" required><br><br>
+
+            <label for="date_tf">Дата взятия кредита:</label>
+            <input type="text" id="date_tf" name="date_tf" required><br><br>
+
+            <label for="sum_tf">Ежемесячный взнос:</label>
+            <input type="text" id="sum_tf" name="sum_tf" required><br><br>
+
+            <label for="sroc_tf">Срок погашения:</label>
+            <input type="text" id="sroc_tf" name="sroc_tf" required><br><br>
+
+            <label for="proc_tf">Процент по кредиту:</label>
+            <input type="text" id="proc_tf" name="proc_tf" required><br><br>
+
+            <label for="sumcred_tf">Сумма кредита:</label>
+            <input type="text" id="sumcred_tf" name="sumcred_tf" required><br><br>
+
+            <button type="submit">Сгенерировать отчет</button>
+        </form>
+        {% endif %}
+
+        {% if data %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID кредита</th>
+                        <th>ID клиента</th>
+                        <th>ID кредитного продукта</th>
+                        <th>Дата взятия кредита</th>
+                        <th>Ежемесячный платеж</th>
+                        <th>Дата выплаты</th>
+                        <th>Процент по кредиту</th>
+                        <th>Статус кредита</th>
+                        <th>Сумма кредита</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in data %}
+                        <tr>
+                            <td>{{ row[0] }}</td>
+                            <td>{{ row[1] }}</td>
+                            <td>{{ row[2] }}</td>
+                            <td>{{ row[3] }}</td>
+                            <td>{{ row[4] }}</td>
+                            <td>{{ row[5] }}</td>
+                            <td>{{ row[6] }}</td>
+                            <td>{{ row[7] }}</td>
+                            <td>{{ row[8] }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+    </div>
+</body>
+</html>
