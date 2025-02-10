@@ -14,16 +14,22 @@ from datetime import datetime
 app = Flask(__name__)
 app.secret_key = 'secret_key'
 
-DATABASE = {
-    'dbname': 'labaratornaya',
-    'user': 'postgres',
-    'password': '0000',
-    'host': 'localhost'
-}
-
 
 def connect_db():
-    return psycopg2.connect(**DATABASE)
+    dbname = os.getenv('DB_NAME')
+    user = os.getenv('DB_USER')
+    password = os.getenv('DB_PASSWORD')
+    host = os.getenv('DB_HOST')
+
+    if not all([dbname, user, password, host]):
+        raise ValueError("Database configuration is incomplete")
+
+    return psycopg2.connect(
+        dbname=dbname,
+        user=user,
+        password=password,
+        host=host
+    )
 
 
 @app.route('/')
