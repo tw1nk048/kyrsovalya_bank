@@ -4,9 +4,9 @@ services:
     image: postgres:14
     restart: always
     environment:
-      POSTGRES_DB: flask-bd
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 0000
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
     ports:
       - "5432:5432"
     volumes:
