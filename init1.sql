@@ -5,7 +5,7 @@
 -- Dumped from database version 16.0
 -- Dumped by pg_dump version 16.0
 
--- Started on 2025-02-16 20:56:48 MSK
+-- Started on 2025-02-10 13:56:10 MSK
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -202,7 +202,7 @@ CREATE SEQUENCE public.client_id_client_seq
 ALTER SEQUENCE public.client_id_client_seq OWNER TO postgres;
 
 --
--- TOC entry 3705 (class 0 OID 0)
+-- TOC entry 3704 (class 0 OID 0)
 -- Dependencies: 215
 -- Name: client_id_client_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -263,7 +263,7 @@ CREATE SEQUENCE public.credit_history_id_credit_history_seq
 ALTER SEQUENCE public.credit_history_id_credit_history_seq OWNER TO postgres;
 
 --
--- TOC entry 3706 (class 0 OID 0)
+-- TOC entry 3705 (class 0 OID 0)
 -- Dependencies: 219
 -- Name: credit_history_id_credit_history_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -288,7 +288,7 @@ CREATE SEQUENCE public.credit_id_credit_seq
 ALTER SEQUENCE public.credit_id_credit_seq OWNER TO postgres;
 
 --
--- TOC entry 3707 (class 0 OID 0)
+-- TOC entry 3706 (class 0 OID 0)
 -- Dependencies: 217
 -- Name: credit_id_credit_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -330,7 +330,7 @@ CREATE SEQUENCE public.credit_products_id_credit_product_seq
 ALTER SEQUENCE public.credit_products_id_credit_product_seq OWNER TO postgres;
 
 --
--- TOC entry 3708 (class 0 OID 0)
+-- TOC entry 3707 (class 0 OID 0)
 -- Dependencies: 221
 -- Name: credit_products_id_credit_product_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -372,7 +372,7 @@ CREATE SEQUENCE public.loan_repayments_id_payout_seq
 ALTER SEQUENCE public.loan_repayments_id_payout_seq OWNER TO postgres;
 
 --
--- TOC entry 3709 (class 0 OID 0)
+-- TOC entry 3708 (class 0 OID 0)
 -- Dependencies: 223
 -- Name: loan_repayments_id_payout_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -424,7 +424,7 @@ CREATE SEQUENCE public.users_id_seq
 ALTER SEQUENCE public.users_id_seq OWNER TO postgres;
 
 --
--- TOC entry 3710 (class 0 OID 0)
+-- TOC entry 3709 (class 0 OID 0)
 -- Dependencies: 226
 -- Name: users_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -481,12 +481,13 @@ ALTER TABLE ONLY public.users ALTER COLUMN id SET DEFAULT nextval('public.users_
 
 
 --
--- TOC entry 3688 (class 0 OID 16570)
+-- TOC entry 3687 (class 0 OID 16570)
 -- Dependencies: 216
 -- Data for Name: client; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.client (id_client, clt_last_name, clt_name, clt_middle_name, clt_date_birth, clt_residential_address, clt_income, clt_passport_data, clt_marital_status) FROM stdin;
+1	Петров	Петр	Викторович	2003-01-01	г Липецк	$30,000.00	1234000000	1
 11	Морозов	Игорь	Николаевич	1978-12-27	г Липецк ул. Ленина, 7	$350,000.00	0123456789	0
 10	Новиков	Олег	Дмитриевич	1983-04-14	г Липецк ул. Гагарина, 10	$900,000.00	9012345678	1
 9	Михайлов	Максим	Александрович	1995-06-19	г Липецк ул. Пушкина, 5	$250,000.00	8901234567	1
@@ -496,6 +497,7 @@ COPY public.client (id_client, clt_last_name, clt_name, clt_middle_name, clt_dat
 5	Кузнецов	Денис	Владимирович	1990-11-05	г Липецк ул. Кирова, 21	$300,000.00	4567890123	0
 4	Смирнова	Елена	Андреевна	1985-03-17	г Липецк ул. Гагарина, 3	$700,000.00	3456789012	1
 3	Петров	Александр	Иванович	1992-08-24	г Липецк ул. Пушкина, 7	$500,000.00	2345678901	2
+2	Иванов	Петр	Сергеевич	1987-05-12	г Липецк ул. Ленина, 15	$550,000.00	1234567890	1
 12	Леонидов	Максим	Юрьевич	2000-05-15	г Липецк ул Советская 24	$5,000.00	0000123456	0
 16	Сморин	Алексей	Дмитриевич	1999-06-20	г Москва	$200.00	0000000000	2
 17	Segeda	Arseniy	Владимирович	2000-10-03	г Липецк ул Космонавтов 23	$100,000.00	0909123456	1
@@ -504,26 +506,31 @@ COPY public.client (id_client, clt_last_name, clt_name, clt_middle_name, clt_dat
 39	Денисов	Денис	Эдуардович	2003-01-01	Липецк	$10,000.00	1234987654	1
 51	Ковач	Семен	Риц	2023-01-01	г Липецк	$20,000.00	1234567890	1
 52	Сегеда	Арсений	Николаевич	2003-06-04	г Липецк	$0.00	1234567890	1
-53	qwe	qwe	qwe	2000-01-01	qwe	$1,000.00	1234567890	1
 \.
 
 
 --
--- TOC entry 3690 (class 0 OID 16578)
+-- TOC entry 3689 (class 0 OID 16578)
 -- Dependencies: 218
 -- Data for Name: credit; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.credit (id_credit, id_client, id_credit_product, crt_date_issue, crt_monthly_contributions, crt_maturity_date, crt_percent_on_credit, crt_status_credit, crt_sum_credit) FROM stdin;
+68	2	2	2000-01-01	$22,222.00	2222-01-01	0.20	1	$10,000,000.00
+69	2	1	2024-06-05	$1,000.00	2024-06-12	1.00	1	$100,000.00
+70	2	1	2025-02-08	$1,000.00	2026-06-04	0.10	1	$12,345.00
 17	11	3	2023-10-10	$500.00	2024-10-10	0.25	1	$4,000.00
 18	5	2	2023-10-10	$35,000.00	2033-11-10	0.10	1	$3,000,000.00
 19	8	2	2023-11-12	$25,000.00	2053-12-12	0.15	0	$7,000,000.00
 15	4	3	2023-11-10	$10,000.00	2026-11-10	0.25	1	$250,000.00
 34	22	4	2023-12-26	$1,000.00	2023-12-26	0.10	1	$1,000,000.00
+38	1	4	2023-12-26	$1,000.00	2023-12-26	0.10	1	$1,000,000.00
 41	22	4	2023-01-01	$1,000.00	2028-01-01	0.30	1	$100,000,000.00
 25	12	3	2022-12-14	$1,200.00	2023-12-14	0.30	2	$15,000.00
 12	12	3	2022-01-01	$1,000.00	2023-01-01	0.30	2	$7,000.00
+43	1	1	2023-01-01	$10,000.00	2023-12-31	0.10	2	$10,000.00
 48	37	1	2023-01-01	$10,000.00	2023-12-31	0.10	1	$10,000.00
+1	1	4	2023-10-01	$20,000.00	2028-11-01	0.10	1	$1,500,000.00
 2	11	3	2023-11-12	$10,000.00	2024-12-12	0.30	1	$80,000.00
 3	10	3	2023-10-10	$15,000.00	2026-11-10	0.25	0	$300,000.00
 4	9	3	2023-11-10	$10,000.00	2025-12-10	0.25	1	$150,000.00
@@ -533,27 +540,38 @@ COPY public.credit (id_credit, id_client, id_credit_product, crt_date_issue, crt
 8	5	2	2023-10-10	$35,000.00	2033-11-10	0.10	1	$3,000,000.00
 9	4	1	2023-11-10	$50,000.00	2053-12-10	0.05	1	$17,000,000.00
 10	3	1	2023-10-10	$50,000.00	2053-11-10	0.10	1	$16,000,000.00
+11	2	1	2023-11-10	$60,000.00	2043-12-10	0.05	1	$12,000,000.00
+13	1	3	2023-11-10	$10,000.00	2026-11-10	0.25	1	$250,000.00
+14	1	2	2023-11-12	$15,000.00	2053-11-12	0.15	1	$4,000,000.00
 16	10	2	2023-11-12	$15,000.00	2053-11-12	0.15	1	$4,000,000.00
+46	1	4	2002-01-01	$1,000.00	2023-01-01	0.30	1	$100,000.00
 50	37	1	2023-01-01	$10,000.00	2023-12-31	0.10	2	$10,000.00
+63	2	2	2024-06-04	$10,000.00	2027-07-21	0.20	1	$99,999.00
 65	22	4	2024-06-04	$1,000.00	2028-01-01	0.30	1	$10,000,000.00
 66	52	1	2024-06-05	$100,000.00	2034-06-05	0.20	0	$1,000,000.00
+67	2	1	2024-06-05	$109.00	2053-01-01	0.20	0	$109,109.00
+62	2	3	2024-06-04	$10.00	1000-06-05	0.20	1	$111,111.00
+55	1	1	2023-01-01	$10.00	9999-01-01	0.30	1	$100.00
 \.
 
 
 --
--- TOC entry 3692 (class 0 OID 16588)
+-- TOC entry 3691 (class 0 OID 16588)
 -- Dependencies: 220
 -- Data for Name: credit_history; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.credit_history (id_credit_history, id_client, id_credit, chs_amount_debt, chs_loan_status) FROM stdin;
 1	12	12	$7,000.00	0
+2	16	1	$2,000.00	0
 3	12	25	$3,000.00	0
+4	1	1	$10,000.00	1
+6	2	2	$12.00	1
 \.
 
 
 --
--- TOC entry 3694 (class 0 OID 16598)
+-- TOC entry 3693 (class 0 OID 16598)
 -- Dependencies: 222
 -- Data for Name: credit_products; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -568,13 +586,16 @@ COPY public.credit_products (id_credit_product, cpr_name_product, cpr_min_koef, 
 
 
 --
--- TOC entry 3696 (class 0 OID 16606)
+-- TOC entry 3695 (class 0 OID 16606)
 -- Dependencies: 224
 -- Data for Name: loan_repayments; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.loan_repayments (id_payout, id_client, id_credit, lnr_date_deposit, lnr_amount_payments, lnr_contribution_status) FROM stdin;
+1	1	1	2023-11-01	$20,000.00	0
+2	1	1	2023-12-01	$20,000.00	0
 3	3	10	2023-11-10	$50,000.00	0
+4	2	11	2023-12-10	$160,000.00	0
 5	3	10	2023-12-10	$50,000.00	0
 6	4	9	2023-12-10	$50,000.00	0
 7	5	8	2023-11-10	$35,000.00	0
@@ -611,12 +632,22 @@ COPY public.loan_repayments (id_payout, id_client, id_credit, lnr_date_deposit, 
 26	12	12	2022-11-01	$160,000.00	1
 27	12	12	2022-12-01	$160,000.00	1
 28	12	12	2023-01-01	$160,000.00	1
+42	1	1	2023-01-01	$20,000.00	0
 45	37	48	2023-01-01	$10,000.00	1
+49	2	38	2023-01-01	$1,000.00	1
+50	2	11	2024-06-04	$9,090.00	0
+51	2	62	2024-06-04	$9,090.00	2
+52	2	63	2024-06-04	$100,000.00	2
+53	1	38	2024-05-06	$1,000.00	1
+54	2	11	2024-06-05	$60,000.00	2
+55	2	67	2024-06-05	$109.00	2
+56	2	38	2024-05-06	$12,345.00	1
+57	2	68	2024-06-06	$22,222.00	0
 \.
 
 
 --
--- TOC entry 3697 (class 0 OID 16661)
+-- TOC entry 3696 (class 0 OID 16661)
 -- Dependencies: 225
 -- Data for Name: number; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -638,7 +669,7 @@ COPY public.number (numbers) FROM stdin;
 
 
 --
--- TOC entry 3699 (class 0 OID 16740)
+-- TOC entry 3698 (class 0 OID 16740)
 -- Dependencies: 227
 -- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -648,21 +679,20 @@ COPY public.users (id, username, password, role) FROM stdin;
 1	admin	scrypt:32768:8:1$yQKoq8VQH49nFHaK$34ddfe8d1c5297c6514316cea78e06cc5b3bae48733ab9f860cbe5f50ef4968c98ad1152fbc0a8644b47bbab64725b4d1ae822af6bbc496390d059c8548736ed	admin
 52	Arseniy	scrypt:32768:8:1$tnBnjQ38EB9Fu1jL$9afc8462d6341f4c9b1ea53669ac9341a030ba1459d6ccccb46c62a0ee6ddc64b7b073028e4d90c7f670ee7aaac320494b2079cefbc43c169b7f102e2f7bba02	admin
 4	test13	test	user
-53	qwe	scrypt:32768:8:1$RkAihTvmMkkB3VPk$df050d4716067bd9b36cdbcc927001f142a67d2345cbba297459b18caa4facaaebd6ccb1bcfab5b29d3c4f41b066e3a834c7143e6f72ac9446e1a996ddbf8cf3	user
 \.
 
 
 --
--- TOC entry 3711 (class 0 OID 0)
+-- TOC entry 3710 (class 0 OID 0)
 -- Dependencies: 215
 -- Name: client_id_client_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.client_id_client_seq', 53, true);
+SELECT pg_catalog.setval('public.client_id_client_seq', 52, true);
 
 
 --
--- TOC entry 3712 (class 0 OID 0)
+-- TOC entry 3711 (class 0 OID 0)
 -- Dependencies: 219
 -- Name: credit_history_id_credit_history_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -671,7 +701,7 @@ SELECT pg_catalog.setval('public.credit_history_id_credit_history_seq', 7, true)
 
 
 --
--- TOC entry 3713 (class 0 OID 0)
+-- TOC entry 3712 (class 0 OID 0)
 -- Dependencies: 217
 -- Name: credit_id_credit_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -680,7 +710,7 @@ SELECT pg_catalog.setval('public.credit_id_credit_seq', 70, true);
 
 
 --
--- TOC entry 3714 (class 0 OID 0)
+-- TOC entry 3713 (class 0 OID 0)
 -- Dependencies: 221
 -- Name: credit_products_id_credit_product_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -689,7 +719,7 @@ SELECT pg_catalog.setval('public.credit_products_id_credit_product_seq', 8, true
 
 
 --
--- TOC entry 3715 (class 0 OID 0)
+-- TOC entry 3714 (class 0 OID 0)
 -- Dependencies: 223
 -- Name: loan_repayments_id_payout_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -698,7 +728,7 @@ SELECT pg_catalog.setval('public.loan_repayments_id_payout_seq', 57, true);
 
 
 --
--- TOC entry 3716 (class 0 OID 0)
+-- TOC entry 3715 (class 0 OID 0)
 -- Dependencies: 226
 -- Name: users_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -761,7 +791,7 @@ ALTER TABLE ONLY public.loan_repayments
 
 
 --
--- TOC entry 3532 (class 2606 OID 16746)
+-- TOC entry 3531 (class 2606 OID 16746)
 -- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -770,7 +800,7 @@ ALTER TABLE ONLY public.users
 
 
 --
--- TOC entry 3534 (class 2606 OID 16748)
+-- TOC entry 3533 (class 2606 OID 16748)
 -- Name: users users_username_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -843,14 +873,6 @@ CREATE INDEX has_history_fk ON public.credit_history USING btree (id_client);
 
 
 --
--- TOC entry 3530 (class 1259 OID 16901)
--- Name: idx_users_username; Type: INDEX; Schema: public; Owner: postgres
---
-
-CREATE INDEX idx_users_username ON public.users USING btree (username);
-
-
---
 -- TOC entry 3523 (class 1259 OID 16612)
 -- Name: loan_repayments_pk; Type: INDEX; Schema: public; Owner: postgres
 --
@@ -891,7 +913,7 @@ CREATE INDEX registr_fk ON public.credit USING btree (id_client);
 
 
 --
--- TOC entry 3541 (class 2620 OID 16682)
+-- TOC entry 3540 (class 2620 OID 16682)
 -- Name: credit trigger_set_default_issue_date; Type: TRIGGER; Schema: public; Owner: postgres
 --
 
@@ -899,7 +921,7 @@ CREATE TRIGGER trigger_set_default_issue_date BEFORE INSERT ON public.credit FOR
 
 
 --
--- TOC entry 3543 (class 2620 OID 16692)
+-- TOC entry 3542 (class 2620 OID 16692)
 -- Name: loan_repayments trigger_set_default_repayment_amount; Type: TRIGGER; Schema: public; Owner: postgres
 --
 
@@ -907,7 +929,7 @@ CREATE TRIGGER trigger_set_default_repayment_amount BEFORE INSERT ON public.loan
 
 
 --
--- TOC entry 3542 (class 2620 OID 16696)
+-- TOC entry 3541 (class 2620 OID 16696)
 -- Name: credit trigger_set_maturity_date; Type: TRIGGER; Schema: public; Owner: postgres
 --
 
@@ -915,25 +937,25 @@ CREATE TRIGGER trigger_set_maturity_date BEFORE INSERT ON public.credit FOR EACH
 
 
 --
--- TOC entry 3537 (class 2606 OID 16922)
+-- TOC entry 3536 (class 2606 OID 16625)
 -- Name: credit_history fk_credit_h_has_histo_client; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.credit_history
-    ADD CONSTRAINT fk_credit_h_has_histo_client FOREIGN KEY (id_client) REFERENCES public.client(id_client) ON DELETE CASCADE;
+    ADD CONSTRAINT fk_credit_h_has_histo_client FOREIGN KEY (id_client) REFERENCES public.client(id_client) ON UPDATE RESTRICT ON DELETE RESTRICT;
 
 
 --
--- TOC entry 3538 (class 2606 OID 16937)
+-- TOC entry 3537 (class 2606 OID 16630)
 -- Name: credit_history fk_credit_h_paid_credit; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.credit_history
-    ADD CONSTRAINT fk_credit_h_paid_credit FOREIGN KEY (id_credit) REFERENCES public.credit(id_credit) ON DELETE CASCADE;
+    ADD CONSTRAINT fk_credit_h_paid_credit FOREIGN KEY (id_credit) REFERENCES public.credit(id_credit) ON UPDATE RESTRICT ON DELETE RESTRICT;
 
 
 --
--- TOC entry 3535 (class 2606 OID 16615)
+-- TOC entry 3534 (class 2606 OID 16615)
 -- Name: credit fk_credit_has_credi_credit_p; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -942,33 +964,33 @@ ALTER TABLE ONLY public.credit
 
 
 --
--- TOC entry 3536 (class 2606 OID 16917)
+-- TOC entry 3535 (class 2606 OID 16620)
 -- Name: credit fk_credit_registr_client; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.credit
-    ADD CONSTRAINT fk_credit_registr_client FOREIGN KEY (id_client) REFERENCES public.client(id_client) ON DELETE CASCADE;
+    ADD CONSTRAINT fk_credit_registr_client FOREIGN KEY (id_client) REFERENCES public.client(id_client) ON UPDATE RESTRICT ON DELETE RESTRICT;
 
 
 --
--- TOC entry 3539 (class 2606 OID 16932)
+-- TOC entry 3538 (class 2606 OID 16635)
 -- Name: loan_repayments fk_loan_rep_payments_credit; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.loan_repayments
-    ADD CONSTRAINT fk_loan_rep_payments_credit FOREIGN KEY (id_credit) REFERENCES public.credit(id_credit) ON DELETE CASCADE;
+    ADD CONSTRAINT fk_loan_rep_payments_credit FOREIGN KEY (id_credit) REFERENCES public.credit(id_credit) ON UPDATE RESTRICT ON DELETE RESTRICT;
 
 
 --
--- TOC entry 3540 (class 2606 OID 16927)
+-- TOC entry 3539 (class 2606 OID 16640)
 -- Name: loan_repayments fk_loan_rep_pays_out_client; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.loan_repayments
-    ADD CONSTRAINT fk_loan_rep_pays_out_client FOREIGN KEY (id_client) REFERENCES public.client(id_client) ON DELETE CASCADE;
+    ADD CONSTRAINT fk_loan_rep_pays_out_client FOREIGN KEY (id_client) REFERENCES public.client(id_client) ON UPDATE RESTRICT ON DELETE RESTRICT;
 
 
--- Completed on 2025-02-16 20:56:48 MSK
+-- Completed on 2025-02-10 13:56:10 MSK
 
 --
 -- PostgreSQL database dump complete
