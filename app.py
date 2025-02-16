@@ -316,8 +316,43 @@ def add_row(table_name):
     return render_template('add_row.html', table_name=table_name, columns=columns)
 
 
-@app.route('/delete_row/<table_name>/<int:row_id>')
+@app.route('/delete_row/<table_name>/<int:row_id>', methods=['GET', 'POST'])
 def delete_row(table_name, row_id):
+    if 'username' not in session or session.get('role') != 'admin':
+        return redirect(url_for('home'))
+
+    table_mapping = {
+        'credit': 'id_credit',
+        'loan_repayments': 'id_payout',
+        'client': 'id_client',
+        'credit_history': 'id_credit_history',
+        'credit_products': 'id_credit_product',
+        'users': 'id',
+    }
+
+    if table_name not in table_mapping:
+        return redirect(url_for('admin'))
+
+    id_column = table_mapping[table_name]
+
+    conn = connect_db()
+    cursor = conn.cursor()
+
+    if table_name == 'client':
+        cursor.execute(f"SELECT id_credit FROM credit_history WHERE id_client = %s AND chs_amount_debt::numeric > 0", (row_id,))
+        debt = cursor.fetchone()
+        if debt:
+            # Если задолженность существует, показать подтверждение
+            return render_template('confirm_delete.html', row_id=row_id, table_name=table_name)
+
+    cursor.execute(f"DELETE FROM {table_name} WHERE {id_column} = %s", (row_id,))
+    conn.commit()
+    conn.close()
+
+    return redirect(url_for('view_table', table_name=table_name))
+
+@app.route('/confirm_delete/<table_name>/<int:row_id>', methods=['POST'])
+def confirm_delete(table_name, row_id):
     if 'username' not in session or session.get('role') != 'admin':
         return redirect(url_for('home'))
 
@@ -342,6 +377,7 @@ def delete_row(table_name, row_id):
     conn.close()
 
     return redirect(url_for('view_table', table_name=table_name))
+
 
 
 @app.route('/edit_row/<table_name>/<int:row_id>', methods=['GET', 'POST'])
