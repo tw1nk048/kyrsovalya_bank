@@ -49,8 +49,12 @@
                 <small>Введите серию и номер паспорта в формате 1234 567890</small>
 
 
-                <label for="clt_marital_status">Семейное положение: 0 - холост; 1 - женат/замужем; 2 - разведен/а.</label>
-                <input type="text" id="clt_marital_status" name="clt_marital_status" required>
+                <label for="clt_marital_status">Семейное положение:</label>
+                <select id="clt_marital_status" name="clt_marital_status" required>
+                    <option value="0">Холост/Не замужем</option>
+                    <option value="1">Женат/Замужем</option>
+                    <option value="2">Разведен/Разведена</option>
+                </select>                
 
                 <button type="submit">Зарегистрироваться</button>
             </form>

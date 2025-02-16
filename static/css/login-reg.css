@@ -17,7 +17,7 @@ body {
     border-radius: 8px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     text-align: center;
-    margin-top: 100px; /* Для учета фиксированного тулбара */
+    margin-top: 100px; /* Учитываем фиксированный тулбар */
     width: 100%;
     max-width: 400px;
 }
@@ -34,25 +34,41 @@ form {
 
 label {
     margin-top: 10px;
+    font-weight: bold;
+    display: block;
+    text-align: left;
+    width: 100%;
+    max-width: 300px;
 }
 
-input {
+input, select {
+    box-sizing: border-box;
     padding: 10px;
     margin-top: 5px;
     margin-bottom: 10px;
     width: 100%;
-    max-width: 300px;
+    max-width: 330px;
     border: 1px solid #ccc;
     border-radius: 4px;
+    font-size: 16px;
+}
+
+input:focus, select:focus {
+    border-color: #5cb85c;
+    outline: none;
 }
 
 button {
-    padding: 10px 20px;
+    padding: 12px 20px;
     background-color: #5cb85c;
     color: #fff;
     border: none;
     border-radius: 4px;
     cursor: pointer;
+    font-size: 16px;
+    width: 100%;
+    max-width: 300px;
+    margin-top: 15px;
 }
 
 button:hover {
