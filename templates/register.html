@@ -44,8 +44,10 @@
                 <label for="clt_income">Доход:</label>
                 <input type="number" step="0.01" id="clt_income" name="clt_income" required>
 
-                <label for="clt_passport_data">Паспортные данные:</label>
-                <input type="text" id="clt_passport_data" name="clt_passport_data" required>
+                <label for="clt_passport_data">Паспортные данные (XXXX XXXXXX):</label>
+                <input type="text" id="clt_passport_data" name="clt_passport_data" required pattern="\d{4} \d{6}" title="Формат: 4 цифры, пробел, 6 цифр (например, 1234 567890)">
+                <small>Введите серию и номер паспорта в формате 1234 567890</small>
+
 
                 <label for="clt_marital_status">Семейное положение: 0 - холост; 1 - женат/замужем; 2 - разведен/а.</label>
                 <input type="text" id="clt_marital_status" name="clt_marital_status" required>

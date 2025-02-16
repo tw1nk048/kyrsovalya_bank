@@ -6,6 +6,7 @@ from reportlab.pdfgen import canvas
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfbase import pdfmetrics
 import io
+import re
 import psycopg2
 
 from dateutil.relativedelta import relativedelta
@@ -77,24 +78,29 @@ def register():
         clt_income = request.form['clt_income']
         clt_passport_data = request.form['clt_passport_data']
         clt_marital_status = request.form['clt_marital_status']
+        
+        clt_passport_data = clt_passport_data.replace(" ", "")
 
         try:
             conn = connect_db()
             cursor = conn.cursor()
 
             cursor.execute("""
-                            insert into client(clt_last_name, clt_name, clt_middle_name, clt_date_birth, clt_residential_address, clt_income, clt_passport_data, clt_marital_status)
-                            values(%s, %s, %s, %s, %s, %s, %s, %s) RETURNING id_client
-                        """, (clt_last_name, clt_name, clt_middle_name, clt_date_birth, clt_residential_address, clt_income, clt_passport_data, clt_marital_status))
+                INSERT INTO client (clt_last_name, clt_name, clt_middle_name, clt_date_birth, 
+                                   clt_residential_address, clt_income, clt_passport_data, clt_marital_status)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s) RETURNING id_client
+            """, (clt_last_name, clt_name, clt_middle_name, clt_date_birth, 
+                  clt_residential_address, clt_income, clt_passport_data, clt_marital_status))
 
             client_id = cursor.fetchone()[0]
-            cursor.execute("INSERT INTO users (id, username, password) VALUES (%s, %s, %s)", (client_id, username, password))
+            cursor.execute("INSERT INTO users (id, username, password) VALUES (%s, %s, %s)", 
+                           (client_id, username, password))
 
             conn.commit()
             conn.close()
             return redirect(url_for('login'))
         except psycopg2.errors.UniqueViolation:
-            flash("Пользователь с таким именем уже существует")
+            flash("Пользователь с таким именем уже существует", "error")
             return redirect(url_for('register'))
     return render_template('register.html')
 
