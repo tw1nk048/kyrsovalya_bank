@@ -20,6 +20,18 @@
     <div class="main">
         <div class="container">
         <h1>Вход</h1>
+
+        <!-- Отображение сообщений flash -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <ul class="flashes">
+                    {% for category, message in messages %}
+                        <li class="flash {{ category }}">{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+
         <form method="POST" action="/login">
             <label for="username">Логин:</label>
             <input type="text" id="username" name="username" required>
