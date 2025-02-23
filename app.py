@@ -315,7 +315,7 @@ def add_row(table_name):
     columns = table_mapping[table_name]['columns']
     columns_print = table_mapping[table_name]['descriptions']
 
-    # Обработка POST-запроса (добавление новой строки)
+    # Обработка POST-запросов(добавление новой строки)
     if request.method == 'POST':
         try:
             # Собираем данные из формы
