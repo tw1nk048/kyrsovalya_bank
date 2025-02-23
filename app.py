@@ -1,4 +1,6 @@
 import os
+from sqlite3 import IntegrityError
+
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask import Flask, render_template, request, session, redirect, url_for, send_file, flash
 from reportlab.lib.pagesizes import letter
@@ -6,64 +8,52 @@ from reportlab.pdfgen import canvas
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfbase import pdfmetrics
 import io
-import re
-import psycopg2
+from models import User, SessionLocal, CreditProduct, Client, LoanRepayment, Credit, CreditHistory
 
-from dateutil.relativedelta import relativedelta
-from datetime import datetime
+from utils.db import connect_db
+import utils.db
 
 app = Flask(__name__)
 app.secret_key = 'secret_key'
 
-
-def connect_db():
-    dbname = os.getenv('DB_NAME')
-    user = os.getenv('DB_USER')
-    password = os.getenv('DB_PASSWORD')
-    host = os.getenv('DB_HOST', 'localhost')
-    port = os.getenv('DB_PORT', '5432')
-
-    return psycopg2.connect(
-        dbname=dbname,
-        user=user,
-        password=password,
-        host=host,
-        port=port
-    )
-
-
 @app.route('/')
 def home():
-    conn = connect_db()
-    cursor = conn.cursor()
-    cursor.execute("SELECT cpr_name_product, cpr_min_koef, cpr_max_koef, cpr_min_date_return, cpr_max_date_return FROM credit_products")
-    credit_products = cursor.fetchall()
-    conn.close()
+    # Создаем сессию базы данных
+    db = SessionLocal()
+
+    # Получаем все кредитные продукты с помощью ORM
+    credit_products = db.query(
+        CreditProduct.cpr_name_product,
+        CreditProduct.cpr_min_koef,
+        CreditProduct.cpr_max_koef,
+        CreditProduct.cpr_min_date_return,
+        CreditProduct.cpr_max_date_return
+    ).all()
+    db.close()
 
     username = session.get('username')
     role = session.get('role')
-    return render_template('home.html', username=username, role=role, credit_products=credit_products)
 
+    return render_template('home.html', username=username, role=role, credit_products=credit_products)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
-        conn = connect_db()
-        cursor = conn.cursor()
-        cursor.execute("SELECT * FROM users WHERE username = %s", (username,))
-        user = cursor.fetchone()
-        conn.close()
-        if user and check_password_hash(user[2], password):
+
+        db = SessionLocal()
+        user = db.query(User).filter(User.username == username).first()
+        db.close()
+
+        if user and check_password_hash(user.password, password):
             session['username'] = username
-            session['role'] = user[3]
+            session['role'] = user.role
             return redirect(url_for('home'))
         else:
             flash("Неправильное имя пользователя или пароль")
             return redirect(url_for('login'))
     return render_template('login.html')
-
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -78,32 +68,36 @@ def register():
         clt_income = request.form['clt_income']
         clt_passport_data = request.form['clt_passport_data']
         clt_marital_status = request.form['clt_marital_status']
-        
         clt_passport_data = clt_passport_data.replace(" ", "")
 
+        db = SessionLocal()
         try:
-            conn = connect_db()
-            cursor = conn.cursor()
+            new_client = Client(clt_last_name=clt_last_name, clt_name=clt_name, clt_middle_name=clt_middle_name, clt_date_birth=clt_date_birth,
+                clt_residential_address=clt_residential_address, clt_income=clt_income, clt_passport_data=clt_passport_data, clt_marital_status=clt_marital_status
+            )
+            db.add(new_client)
+            db.commit()
 
-            cursor.execute("""
-                INSERT INTO client (clt_last_name, clt_name, clt_middle_name, clt_date_birth, 
-                                   clt_residential_address, clt_income, clt_passport_data, clt_marital_status)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s) RETURNING id_client
-            """, (clt_last_name, clt_name, clt_middle_name, clt_date_birth, 
-                  clt_residential_address, clt_income, clt_passport_data, clt_marital_status))
+            new_user = User(id=new_client.id_client, username=username, password=password, role='user')
+            db.add(new_user)
+            db.commit()
+            db.close()
 
-            client_id = cursor.fetchone()[0]
-            cursor.execute("INSERT INTO users (id, username, password) VALUES (%s, %s, %s)", 
-                           (client_id, username, password))
-
-            conn.commit()
-            conn.close()
+            flash("Регистрация прошла успешно!", "success")
             return redirect(url_for('login'))
-        except psycopg2.errors.UniqueViolation:
+        except IntegrityError:
+            db.rollback()
+            db.close()
             flash("Пользователь с таким именем уже существует", "error")
             return redirect(url_for('register'))
-    return render_template('register.html')
+        except Exception as e:
+            db.rollback()
+            db.close()
+            flash(f"Ошибка при регистрации: {str(e)}", "error")
+            return redirect(url_for('register'))
 
+
+    return render_template('register.html')
 
 @app.route('/logout')
 def logout():
@@ -112,117 +106,107 @@ def logout():
     return redirect(url_for('home'))
 
 
+
 @app.route('/profile')
 def profile():
     if 'username' not in session:
         return redirect(url_for('login'))
+
     username = session['username']
-    conn = connect_db()
-    cursor = conn.cursor()
+    db = SessionLocal()
 
-    cursor.execute("""
-        SELECT u.id, c.clt_last_name, c.clt_name, c.clt_middle_name, c.clt_date_birth, c.clt_residential_address, c.clt_income, c.clt_passport_data, c.clt_marital_status
-        FROM users u
-        JOIN client c ON u.id = c.id_client
-        WHERE u.username = %s
-    """, (username,))
-    client_info = cursor.fetchone()
+    try:
+        # Получаем информацию о пользователе и клиенте
+        user = db.query(User).filter(User.username == username).first()
+        if not user:
+            flash("Пользователь не найден", "error")
+            return redirect(url_for('home'))
 
-    if not client_info:
-        conn.close()
-        flash("Не удалось загрузить информацию профиля")
+        client = db.query(Client).filter(Client.id_client == user.id).first()
+        if not client:
+            flash("Клиент не найден", "error")
+            return redirect(url_for('home'))
+
+        # Преобразуем семейное положение в читаемый формат
+        marital_status_map = {
+            '0': 'Холост',
+            '1': 'Женат/Замужем',
+            '2': 'Разведен/а'
+        }
+        marital_status = marital_status_map.get(client.clt_marital_status, 'Неизвестно')
+
+        # Формируем данные о клиенте
+        user_data = {
+            'id': client.id_client,
+            'last_name': client.clt_last_name,
+            'name': client.clt_name,
+            'middle_name': client.clt_middle_name,
+            'date_birth': client.clt_date_birth,
+            'residential_address': client.clt_residential_address,
+            'income': client.clt_income,
+            'passport_data': client.clt_passport_data,
+            'marital_status': marital_status
+        }
+
+        # Получаем кредиты клиента
+        credits = db.query(Credit).filter(Credit.id_client == client.id_client).all()
+        user_credits = []
+        for credit in credits:
+            # Преобразуем статус кредита в читаемый формат
+            credit_status_map = {
+                '0': 'На рассмотрение',
+                '1': 'Выдан',
+                '2': 'Отказано'
+            }
+            credit_status = credit_status_map.get(credit.crt_status_credit, 'Неизвестно')
+
+            # Получаем информацию о кредитном продукте
+            credit_product = db.query(CreditProduct).filter(CreditProduct.id_credit_product == credit.id_credit_product).first()
+
+            credit_data = {
+                'id': credit.id_credit,
+                'product_id': credit.id_credit_product,
+                'date_issue': credit.crt_date_issue,
+                'monthly_contributions': credit.crt_monthly_contributions,
+                'maturity_date': credit.crt_maturity_date,
+                'percent_on_credit': int(credit.crt_percent_on_credit * 100),
+                'status': credit_status,
+                'sum': credit.crt_sum_credit,
+                'product_name': credit_product.cpr_name_product,
+                'min_koef': credit_product.cpr_min_koef,
+                'max_koef': credit_product.cpr_max_koef,
+                'min_date_return': credit_product.cpr_min_date_return,
+                'max_date_return': credit_product.cpr_max_date_return
+            }
+            user_credits.append(credit_data)
+
+        # Получаем выплаты клиента
+        payouts = db.query(LoanRepayment).filter(LoanRepayment.id_client == client.id_client).all()
+        user_payouts = []
+        for payout in payouts:
+            # Преобразуем статус выплаты в читаемый формат
+            payout_status_map = {
+                '0': 'Заплачено',
+                '1': 'Просрочено'
+            }
+            payout_status = payout_status_map.get(payout.lnr_contribution_status, 'Неизвестно')
+
+            payout_data = {
+                'id': payout.id_payout,
+                'credit_id': payout.id_credit,
+                'date_deposit': payout.lnr_date_deposit,
+                'amount_payments': payout.lnr_amount_payments,
+                'contribution_status': payout_status
+            }
+            user_payouts.append(payout_data)
+
+        return render_template('profile.html', user_data=user_data, user_credits=user_credits, user_payouts=user_payouts)
+
+    except Exception as e:
+        flash(f"Ошибка при загрузке профиля: {str(e)}", "error")
         return redirect(url_for('home'))
-
-    if client_info[8] == '0':
-        marry = 'Холост'
-    if client_info[8] == '1':
-        marry = 'Женат/Замужем'
-    if client_info[8] == '2':
-        marry = 'Разведен/а'
-
-    user_data = {
-        'id': client_info[0],
-        'last_name': client_info[1],
-        'name': client_info[2],
-        'middle_name': client_info[3],
-        'date_birth': client_info[4],
-        'residential_address': client_info[5],
-        'income': client_info[6],
-        'passport_data': client_info[7],
-        'marital_status': marry
-    }
-
-    cursor.execute("""
-        SELECT id_credit, id_credit_product, crt_date_issue, crt_monthly_contributions, crt_maturity_date, crt_percent_on_credit, crt_status_credit, crt_sum_credit
-        FROM credit
-        WHERE id_client = %s
-    """, (user_data['id'],))
-    credits = cursor.fetchall()
-
-    user_credits = []
-    for credit in credits:
-
-        credit_stat = ''
-        if credit[6] == '0':
-            credit_stat = 'На рассмотрение'
-        if credit[6] == '1':
-            credit_stat = 'Выдан'
-        if credit[6] == '2':
-            credit_stat = 'Отказано'
-
-        credit_data = {
-            'id': credit[0],
-            'product_id': credit[1],
-            'date_issue': credit[2],
-            'monthly_contributions': credit[3],
-            'maturity_date': credit[4],
-            'percent_on_credit': int(credit[5] * 100),
-            'status': credit_stat,
-            'sum': credit[7]
-        }
-
-        cursor.execute("""
-            SELECT cpr_name_product, cpr_min_koef, cpr_max_koef, cpr_min_date_return, cpr_max_date_return
-            FROM credit_products
-            WHERE id_credit_product = %s
-        """, (credit_data['product_id'],))
-        product_info = cursor.fetchone()
-
-        credit_data['product_name'] = product_info[0]
-        credit_data['min_koef'] = product_info[1]
-        credit_data['max_koef'] = product_info[2]
-        credit_data['min_date_return'] = product_info[3]
-        credit_data['max_date_return'] = product_info[4]
-
-        user_credits.append(credit_data)
-
-    cursor.execute("""
-        SELECT id_payout, id_credit, lnr_date_deposit, lnr_amount_payments, lnr_contribution_status
-        FROM loan_repayments
-        WHERE id_client = %s
-    """, (user_data['id'],))
-    payouts = cursor.fetchall()
-
-    user_payouts = []
-    for payout in payouts:
-        loan_stat = ''
-        if payout[4] == '0':
-            loan_stat = 'Заплачено'
-        if payout[4] == '1':
-            loan_stat = 'Просрочено'
-        payout_data = {
-            'id': payout[0],
-            'credit_id': payout[1],
-            'date_deposit': payout[2],
-            'amount_payments': payout[3],
-            'contribution_status': loan_stat
-        }
-        user_payouts.append(payout_data)
-
-    conn.close()
-
-    return render_template('profile.html', user_data=user_data, user_credits=user_credits, user_payouts=user_payouts)
-
+    finally:
+        db.close()
 
 @app.route('/admin')
 def admin():
@@ -231,96 +215,153 @@ def admin():
     return render_template('admin.html')
 
 
+
 @app.route('/view_table/<table_name>')
 def view_table(table_name):
+    # Проверка прав доступа
     if 'username' not in session or session.get('role') != 'admin':
         return redirect(url_for('home'))
 
-    conn = connect_db()
-    cursor = conn.cursor()
+    # Создаем сессию базы данных
+    db = SessionLocal()
 
-    table_mapping = {
-        'credit': ('credit', ['id_credit', 'id_client', 'id_credit_product', 'crt_date_issue', 'crt_monthly_contributions', 'crt_maturity_date', 'crt_percent_on_credit', 'crt_status_credit', 'crt_sum_credit']),
-        'loan_repayments': ('loan_repayments', ['id_payout', 'id_client', 'id_credit', 'lnr_date_deposit', 'lnr_amount_payments', 'lnr_contribution_status']),
-        'client': ('client', ['id_client', 'clt_last_name', 'clt_name', 'clt_middle_name', 'clt_date_birth', 'clt_residential_address', 'clt_income', 'clt_passport_data', 'clt_marital_status']),
-        'credit_history': ('credit_history', ['id_credit_history', 'id_client', 'id_credit', 'chs_amount_debt', 'chs_loan_status']),
-        'credit_products': ('credit_products', ['id_credit_product', 'cpr_name_product', 'cpr_min_koef', 'cpr_max_koef', 'cpr_min_date_return', 'cpt_max_date_return']),
-        'users': ('users', ['id', 'username', 'role']),
-    }
+    try:
+        # Маппинг таблиц и их колонок
+        table_mapping = {
+            'credit': (Credit, ['id_credit', 'id_client', 'id_credit_product', 'crt_date_issue',
+                                'crt_monthly_contributions', 'crt_maturity_date', 'crt_percent_on_credit',
+                                'crt_status_credit', 'crt_sum_credit']),
+            'loan_repayments': (LoanRepayment, ['id_payout', 'id_client', 'id_credit', 'lnr_date_deposit',
+                                                'lnr_amount_payments', 'lnr_contribution_status']),
+            'client': (Client, ['id_client', 'clt_last_name', 'clt_name', 'clt_middle_name', 'clt_date_birth', 'clt_residential_address', 'clt_income', 'clt_passport_data', 'clt_marital_status']),
+            'credit_history': (CreditHistory, ['id_credit_history', 'id_client', 'id_credit', 'chs_amount_debt', 'chs_loan_status']),
+            'credit_products': (CreditProduct, ['id_credit_product', 'cpr_name_product', 'cpr_min_koef', 'cpr_max_koef', 'cpr_min_date_return', 'cpr_max_date_return']),
+            'users': (User, ['id', 'username', 'role']),
+        }
 
-    if table_name not in table_mapping:
+        # Проверка, что таблица существует в маппинге
+        if table_name not in table_mapping:
+            flash(f"Таблица '{table_name}' не найдена.", "error")
+            return redirect(url_for('admin'))
+
+        # Получаем модель и колонки
+        model, columns = table_mapping[table_name]
+
+        # Получаем данные из таблицы
+        rows = db.query(model).all()
+
+        # Преобразуем объекты SQLAlchemy в словари
+        rows_dicts = [model_to_dict(row, columns) for row in rows]
+
+        return render_template('view_table.html', table_title=table_name, columns=columns, rows=rows_dicts)
+
+    except Exception as e:
+        # Обработка ошибок
+        flash(f"Ошибка при загрузке таблицы '{table_name}': {str(e)}", "error")
         return redirect(url_for('admin'))
+    finally:
+        # Закрываем сессию
+        db.close()
 
-    table_title, columns = table_mapping[table_name]
-
-    if table_title == 'users':
-        cursor.execute(f"SELECT id, username, role FROM {table_title}")
-        rows = cursor.fetchall()
-        conn.close()
-        return render_template('view_table.html', table_title=table_title, columns=columns, rows=rows)
-
-    cursor.execute(f"SELECT * FROM {table_title}")
-    rows = cursor.fetchall()
-    conn.close()
-
-    return render_template('view_table.html', table_title=table_title, columns=columns, rows=rows)
-
+def model_to_dict(row, columns):
+    return {column: getattr(row, column) for column in columns}
 
 @app.route('/add_row/<table_name>', methods=['GET', 'POST'])
 def add_row(table_name):
+    # Проверка прав доступа
     if 'username' not in session or session.get('role') != 'admin':
         return redirect(url_for('home'))
 
+    # Маппинг таблиц, колонок и их описаний
     table_mapping = {
-        'credit': ['id_client', 'id_credit_product', 'crt_date_issue', 'crt_monthly_contributions', 'crt_maturity_date', 'crt_percent_on_credit', 'crt_status_credit', 'crt_sum_credit'],
-        'loan_repayments': ['id_client', 'id_credit', 'lnr_date_deposit', 'lnr_amount_payments', 'lnr_contribution_status'],
-        'client': ['clt_last_name', 'clt_name', 'clt_middle_name', 'clt_date_birth', 'clt_residential_address', 'clt_income', 'clt_passport_data', 'clt_marital_status'],
-        'credit_history': ['id_client', 'id_credit', 'chs_amount_debt', 'chs_loan_status'],
-        'credit_products': ['cpr_name_product', 'cpr_min_koef', 'cpr_max_koef', 'cpr_min_date_return', 'cpr_max_date_return'],
-        'users': ['id', 'username', 'password', 'role'],
-    }
-    table_mapping_print = {
-        'credit': ['ID клиента', 'ID кредитного продукта', 'Дата взятия', 'Ежемесячный платеж', 'Дата выплачивания', 'Процент', 'Статус 0 - на рассмотрение. 1 - выдан 2 - отказано', 'Сумма кредита'],
-        'loan_repayments': ['ID клиента', 'ID кредита', 'Дата внесения средств', 'Сумма выплаты', 'Статус 0 - заплачено 1 - просрочено 2 - на рассмотрение'],
-        'client': ['Фамилия', 'Имя', 'Отчество', 'Дата рождения', 'Адрес проживания', 'Заработок', 'Паспорт', 'Статус 0 - холост 1 - женат/замужем 2 - разведен/а'],
-        'credit_history': ['ID клиента', 'ID кредита', 'Сумма долга', 'Статус 0 - заплачено 1 - просрочено'],
-        'credit_products': ['Названия продукта', 'Мин. коэф.', 'Макс. коэф.', 'Мин. дата возврата', 'Макс. дата возврата'],
-        'users': ['ID', 'Логин', 'Пароль', 'Роль'],
+        'credit': {
+            'columns': ['id_client', 'id_credit_product', 'crt_date_issue', 'crt_monthly_contributions',
+                        'crt_maturity_date', 'crt_percent_on_credit', 'crt_status_credit', 'crt_sum_credit'],
+            'descriptions': ['ID клиента', 'ID кредитного продукта', 'Дата взятия', 'Ежемесячный платеж',
+                             'Дата выплачивания', 'Процент', 'Статус (0 - на рассмотрение, 1 - выдан, 2 - отказано)',
+                             'Сумма кредита']
+        },
+        'loan_repayments': {
+            'columns': ['id_client', 'id_credit', 'lnr_date_deposit', 'lnr_amount_payments', 'lnr_contribution_status'],
+            'descriptions': ['ID клиента', 'ID кредита', 'Дата внесения средств', 'Сумма выплаты',
+                             'Статус (0 - заплачено, 1 - просрочено, 2 - на рассмотрение)']
+        },
+        'client': {
+            'columns': ['clt_last_name', 'clt_name', 'clt_middle_name', 'clt_date_birth', 'clt_residential_address',
+                        'clt_income', 'clt_passport_data', 'clt_marital_status'],
+            'descriptions': ['Фамилия', 'Имя', 'Отчество', 'Дата рождения', 'Адрес проживания', 'Заработок',
+                             'Паспорт', 'Статус (0 - холост, 1 - женат/замужем, 2 - разведен/а)']
+        },
+        'credit_history': {
+            'columns': ['id_client', 'id_credit', 'chs_amount_debt', 'chs_loan_status'],
+            'descriptions': ['ID клиента', 'ID кредита', 'Сумма долга', 'Статус (0 - заплачено, 1 - просрочено)']
+        },
+        'credit_products': {
+            'columns': ['cpr_name_product', 'cpr_min_koef', 'cpr_max_koef', 'cpr_min_date_return', 'cpr_max_date_return'],
+            'descriptions': ['Название продукта', 'Мин. коэф.', 'Макс. коэф.', 'Мин. дата возврата', 'Макс. дата возврата']
+        },
+        'users': {
+            'columns': ['id', 'username', 'password', 'role'],
+            'descriptions': ['ID', 'Логин', 'Пароль', 'Роль']
+        }
     }
 
+    # Проверка, что таблица существует в маппинге
     if table_name not in table_mapping:
+        flash(f"Таблица '{table_name}' не найдена.", "error")
         return redirect(url_for('admin'))
 
-    columns = table_mapping[table_name]
-    columns_print = table_mapping_print[table_name]
+    # Получаем колонки и их описания
+    columns = table_mapping[table_name]['columns']
+    columns_print = table_mapping[table_name]['descriptions']
 
+    # Обработка POST-запроса (добавление новой строки)
     if request.method == 'POST':
-        values = []
-        for column in columns:
-            value = request.form[column]
-            if value == '':
-                value = None
-            values.append(value)
+        try:
+            # Собираем данные из формы
+            data = {}
+            for column in columns:
+                value = request.form.get(column)
+                data[column] = value if value != '' else None  # Заменяем пустые строки на None
 
-        conn = connect_db()
-        cursor = conn.cursor()
-        cursor.execute(
-            f"INSERT INTO {table_name} ({', '.join(columns)}) VALUES ({', '.join(['%s'] * len(columns))})",
-            tuple(values)
-        )
-        conn.commit()
-        conn.close()
+            # Создаем новую запись в базе данных
+            db = SessionLocal()
+            model = get_model_by_table_name(table_name)  # Функция для получения модели по имени таблицы
+            new_row = model(**data)
+            db.add(new_row)
+            db.commit()
+            db.close()
 
-        return redirect(url_for('view_table', table_name=table_name))
+            flash("Запись успешно добавлена.", "success")
+            return redirect(url_for('view_table', table_name=table_name))
 
-    return render_template('add_row.html', table_name=table_name, columns=columns)
+        except Exception as e:
+            db.rollback()
+            flash(f"Ошибка при добавлении записи: {str(e)}", "error")
+            return redirect(url_for('add_row', table_name=table_name))
 
+    # Обработка GET-запроса (отображение формы)
+    return render_template('add_row.html', table_name=table_name, columns=columns, columns_print=columns_print)
+
+# Вспомогательная функция для получения модели по имени таблицы
+def get_model_by_table_name(table_name):
+    model_mapping = {
+        'credit': Credit,
+        'loan_repayments': LoanRepayment,
+        'client': Client,
+        'credit_history': CreditHistory,
+        'credit_products': CreditProduct,
+        'users': User
+    }
+    return model_mapping.get(table_name)
 
 @app.route('/delete_row/<table_name>/<int:row_id>', methods=['GET', 'POST'])
 def delete_row(table_name, row_id):
+    # Проверка прав доступа
     if 'username' not in session or session.get('role') != 'admin':
         return redirect(url_for('home'))
 
+    # Маппинг таблиц и их первичных ключей
     table_mapping = {
         'credit': 'id_credit',
         'loan_repayments': 'id_payout',
@@ -330,26 +371,51 @@ def delete_row(table_name, row_id):
         'users': 'id',
     }
 
+    # Проверка, что таблица существует в маппинге
     if table_name not in table_mapping:
+        flash(f"Таблица '{table_name}' не найдена.", "error")
         return redirect(url_for('admin'))
 
+    # Получаем имя первичного ключа для таблицы
     id_column = table_mapping[table_name]
 
-    conn = connect_db()
-    cursor = conn.cursor()
+    # Создаем сессию базы данных
+    db = SessionLocal()
 
-    if table_name == 'client':
-        cursor.execute(f"SELECT id_credit FROM credit_history WHERE id_client = %s AND chs_amount_debt::numeric > 0", (row_id,))
-        debt = cursor.fetchone()
-        if debt:
-            # Если задолженность существует, показать подтверждение
-            return render_template('confirm_delete.html', row_id=row_id, table_name=table_name)
+    try:
+        # Получаем модель таблицы
+        model = get_model_by_table_name(table_name)
 
-    cursor.execute(f"DELETE FROM {table_name} WHERE {id_column} = %s", (row_id,))
-    conn.commit()
-    conn.close()
+        # Для таблицы 'client' проверяем наличие задолженности
+        if table_name == 'client':
+            debt = db.query(CreditHistory).filter(
+                CreditHistory.id_client == row_id,
+                CreditHistory.chs_amount_debt > 0
+            ).first()
+
+            if debt:
+                # Если задолженность существует, показываем подтверждение удаления
+                return render_template('confirm_delete.html', row_id=row_id, table_name=table_name)
+
+        # Удаляем строку из таблицы
+        row_to_delete = db.query(model).filter(getattr(model, id_column) == row_id).first()
+        if row_to_delete:
+            db.delete(row_to_delete)
+            db.commit()
+            flash(f"Запись успешно удалена из таблицы '{table_name}'.", "success")
+        else:
+            flash(f"Запись с ID {row_id} не найдена в таблице '{table_name}'.", "error")
+
+    except Exception as e:
+        # Обработка ошибок
+        db.rollback()
+        flash(f"Ошибка при удалении записи: {str(e)}", "error")
+    finally:
+        # Закрываем сессию
+        db.close()
 
     return redirect(url_for('view_table', table_name=table_name))
+
 
 @app.route('/confirm_delete/<table_name>/<int:row_id>', methods=['POST'])
 def confirm_delete(table_name, row_id):
@@ -370,7 +436,7 @@ def confirm_delete(table_name, row_id):
 
     id_column = table_mapping[table_name]
 
-    conn = connect_db()
+    conn = utils.db.connect_db()
     cursor = conn.cursor()
     cursor.execute(f"DELETE FROM {table_name} WHERE {id_column} = %s", (row_id,))
     conn.commit()
@@ -409,7 +475,7 @@ def edit_row(table_name, row_id):
     columns = table_mapping[table_name]
     id_column = id_mapping[table_name]
 
-    conn = connect_db()
+    conn = utils.db.connect_db()
     cursor = conn.cursor()
 
     if request.method == 'POST':
@@ -442,7 +508,7 @@ def report1():
         year_from = request.form['year_from']
         year_to = request.form['year_to']
 
-        conn = connect_db()
+        conn = utils.db.connect_db()
         cursor = conn.cursor()
         cursor.execute("""
             SELECT crt.id_credit, clt.clt_last_name, clt.clt_name, crp.cpr_name_product, 
@@ -524,7 +590,7 @@ def report2():
         onegod_value = request.form['onegod_tf']
         lastgod_value = request.form['lastgod_tf']
 
-        conn = connect_db()
+        conn = utils.db.connect_db()
         cursor = conn.cursor()
         cursor.execute(f"""
             SELECT clt.clt_last_name, clt.clt_name, cpr.cpr_name_product, crt.crt_sum_credit
@@ -550,7 +616,7 @@ def report3():
     if request.method == 'POST':
         client_id = request.form['client_id']
 
-        conn = connect_db()
+        conn = utils.db.connect_db()
         cursor = conn.cursor()
         cursor.execute(f"""
             SELECT clt.clt_last_name, clt.clt_name, crt.crt_sum_credit, lrp.lnr_date_deposit, lrp.lnr_amount_payments
@@ -582,7 +648,7 @@ def procedure():
         percent_on_credit = request.form['proc_tf']
         sum_credit = request.form['sumcred_tf']
 
-        conn = connect_db()
+        conn = utils.db.connect_db()
         cursor = conn.cursor()
         cursor.execute(f"""
             CALL create_credit_and_repayment(
@@ -609,7 +675,7 @@ def apply_credit():
     if 'username' not in session:
         return redirect(url_for('login'))
 
-    conn = connect_db()
+    conn = utils.db.connect_db()
     cursor = conn.cursor()
 
     if request.method == 'POST':
@@ -644,7 +710,7 @@ def view_applications():
     if 'username' not in session or session['role'] != 'admin':
         return redirect(url_for('login'))
 
-    conn = connect_db()
+    conn = utils.db.connect_db()
     cursor = conn.cursor()
     cursor.execute("""
         SELECT cr.id_credit, c.clt_last_name, c.clt_name, c.clt_middle_name, cp.cpr_name_product, cr.crt_sum_credit, cr.crt_maturity_date, cr.crt_status_credit, cr.crt_date_issue
@@ -664,7 +730,7 @@ def approve_application(credit_id):
     if 'username' not in session or session['role'] != 'admin':
         return redirect(url_for('login'))
 
-    conn = connect_db()
+    conn = utils.db.connect_db()
     cursor = conn.cursor()
 
     # Обновляем статус кредита на 1 (одобрено)
@@ -685,7 +751,7 @@ def reject_application(credit_id):
     if 'username' not in session or session['role'] != 'admin':
         return redirect(url_for('login'))
 
-    conn = connect_db()
+    conn = utils.db.connect_db()
     cursor = conn.cursor()
 
     # Обновляем статус кредита на 2 (отказано)
@@ -706,7 +772,7 @@ def make_payment():
     if 'username' not in session:
         return redirect(url_for('login'))
 
-    conn = connect_db()
+    conn = utils.db.connect_db()
     cursor = conn.cursor()
 
     if request.method == 'POST':
@@ -742,7 +808,7 @@ def view_payments():
     if 'username' not in session or session['role'] != 'admin':
         return redirect(url_for('login'))
 
-    conn = connect_db()
+    conn = utils.db.connect_db()
     cursor = conn.cursor()
     cursor.execute("""
         SELECT lr.id_payout, c.clt_last_name, c.clt_name, c.clt_middle_name, lr.id_credit, lr.lnr_date_deposit, lr.lnr_amount_payments, lr.lnr_contribution_status
@@ -761,7 +827,7 @@ def mark_payment_paid(payment_id):
     if 'username' not in session or session['role'] != 'admin':
         return redirect(url_for('login'))
 
-    conn = connect_db()
+    conn = utils.db.connect_db()
     cursor = conn.cursor()
     cursor.execute("""
         UPDATE loan_repayments
@@ -780,7 +846,7 @@ def mark_payment_overdue(payment_id):
     if 'username' not in session or session['role'] != 'admin':
         return redirect(url_for('login'))
 
-    conn = connect_db()
+    conn = utils.db.connect_db()
     cursor = conn.cursor()
     cursor.execute("""
         UPDATE loan_repayments

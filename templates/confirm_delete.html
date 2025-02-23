@@ -3,17 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Подтверждегние удаления</title>
+    <title>Подтверждение удаления</title>
     <link rel="stylesheet" href="/static/css/confirm_delete.css">
 </head>
 <body>
-    <div>
-        <h2>Предупреждение!</h2>
-        <p>Вы точно хотите удалить клиента с имеющимися кредитами?</p>
-        <form action="{{ url_for('confirm_delete', table_name=table_name, row_id=row_id) }}" method="POST">
-            <button type="submit">Да, удалить</button>
-            <a href="{{ url_for('view_table', table_name=table_name) }}">Нет, отмена</a>
-        </form>
-    </div>
+<div class="confirmation-container">
+    <h2>Предупреждение!</h2>
+    <p>Вы точно хотите удалить клиента с имеющимися кредитами?</p>
+    <form action="{{ url_for('delete_row', table_name=table_name, row_id=row_id) }}" method="POST">
+        <button type="submit" class="btn-confirm">Да, удалить</button>
+        <a href="{{ url_for('view_table', table_name=table_name) }}" class="btn-cancel">Нет, отмена</a>
+    </form>
+</div>
 </body>
 </html>
+
